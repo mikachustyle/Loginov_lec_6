@@ -1,0 +1,167 @@
+#:import dp kivy.metrics.dp
+
+<Primary@Button>:
+    background_normal: ''
+    background_color: (.16, .36, .68, 1)
+    font_size: '15sp'
+    size_hint_y: None
+    height: dp(46)
+
+<OperationRow>:
+    orientation: 'horizontal'
+    padding: dp(6), dp(3)
+    spacing: dp(8)
+    Button:
+        text: root.title + '\n' + root.subtitle
+        font_size: '14sp'
+        text_size: self.width - dp(14), self.height
+        valign: 'middle'
+        halign: 'left'
+        shorten: True
+        background_normal: ''
+        background_color: (.13, .20, .32, 1)
+        disabled: app.busy
+        on_release: app.edit(root.entry_id)
+    Label:
+        text: root.amount
+        font_size: '14sp'
+        size_hint_x: None
+        width: dp(115)
+
+<Editor>:
+    title: 'Изменить операцию' if root.entry_id else 'Новая операция'
+    size_hint: .95, None
+    height: min(dp(390), app.root.height)
+    auto_dismiss: False
+    BoxLayout:
+        orientation: 'vertical'
+        spacing: dp(7)
+        Spinner:
+            id: kind
+            text: 'Расход'
+            values: ['Расход', 'Доход']
+            on_text: root.set_kind(self.text)
+        Spinner:
+            id: category
+            text: 'Офис'
+            values: root.choices
+        TextInput:
+            id: description
+            hint_text: 'Описание операции'
+            multiline: False
+        TextInput:
+            id: amount
+            hint_text: 'Сумма в рублях'
+            multiline: False
+            input_type: 'number'
+        TextInput:
+            id: day
+            hint_text: 'Дата ГГГГ-ММ-ДД'
+            multiline: False
+        Label:
+            id: error
+            text_size: self.width, None
+            font_size: '13sp'
+            color: (1, .7, .6, 1)
+        BoxLayout:
+            size_hint_y: None
+            height: dp(46)
+            spacing: dp(6)
+            Primary:
+                text: 'Отмена'
+                on_release: root.dismiss()
+            Primary:
+                text: 'Удалить'
+                disabled: not root.entry_id
+                on_release: app.delete_row(root)
+            Primary:
+                text: 'Сохранить'
+                on_release: root.save()
+
+<SyncDialog>:
+    title: 'REST-синхронизация'
+    size_hint: .95, None
+    height: dp(290)
+    BoxLayout:
+        orientation: 'vertical'
+        spacing: dp(7)
+        TextInput:
+            id: url
+            hint_text: 'URL сервера'
+            multiline: False
+        TextInput:
+            id: token
+            hint_text: 'Токен'
+            password: True
+            multiline: False
+        Primary:
+            text: 'Синхронизировать'
+            on_release: root.run_sync()
+        Primary:
+            text: 'Загрузить с сервера'
+            on_release: root.run_sync(True)
+        Primary:
+            text: 'Закрыть'
+            on_release: root.dismiss()
+
+BoxLayout:
+    orientation: 'vertical'
+    padding: dp(14)
+    spacing: dp(8)
+    canvas.before:
+        Color:
+            rgba: (.07, .11, .19, 1)
+        Rectangle:
+            pos: self.pos
+            size: self.size
+    Label:
+        text: 'Бизнес-журнал'
+        font_size: '25sp'
+        bold: True
+        size_hint_y: None
+        height: dp(43)
+    Label:
+        text: 'Баланс  ' + app.balance
+        font_size: '23sp'
+        bold: True
+        size_hint_y: None
+        height: dp(40)
+    Label:
+        text: 'Доходы ' + app.income + '\nРасходы ' + app.expense
+        font_size: '16sp'
+        size_hint_y: None
+        height: dp(54)
+    Primary:
+        text: '+ Добавить операцию'
+        disabled: app.busy
+        on_release: app.edit()
+    BoxLayout:
+        spacing: dp(7)
+        size_hint_y: None
+        height: dp(46)
+        Primary:
+            text: 'Аналитика'
+            on_release: app.analytics()
+        Primary:
+            text: 'CSV'
+            on_release: app.export()
+        Primary:
+            text: 'Облако'
+            disabled: app.busy
+            on_release: app.sync_dialog()
+    Label:
+        text: app.status
+        text_size: self.width, None
+        halign: 'left'
+        size_hint_y: None
+        height: min(dp(76), max(dp(38), self.texture_size[1] + dp(8)))
+        font_size: '13sp'
+    RecycleView:
+        id: operations
+        viewclass: 'OperationRow'
+        RecycleBoxLayout:
+            default_size: None, dp(64)
+            default_size_hint: 1, None
+            size_hint_y: None
+            height: self.minimum_height
+            orientation: 'vertical'
